@@ -1,8 +1,89 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import coloring1 from './assets/coloring_page_1.png';
+import coloring2 from './assets/coloring_page_2.png';
+import coloring3 from './assets/coloring_page_3.png';
 
 export default function App() {
+  const bgPlayerRef = useRef(null);
+  const playerDivRef = useRef(null);
+  const [ytReady, setYtReady] = useState(false);
   const [evilMode, setEvilMode] = useState(false);
   const [activeTab, setActiveTab] = useState('abby');
+
+  // Load YouTube IFrame API once
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.YT && window.YT.Player) {
+      setYtReady(true);
+      return;
+    }
+    const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+    if (!existing) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof prev === 'function') prev();
+      setYtReady(true);
+    };
+  }, []);
+
+  // Create a background player for the main page (Abby tab)
+  useEffect(() => {
+    if (!ytReady) return;
+    if (bgPlayerRef.current) return; // already created (React StrictMode safe)
+
+    try {
+      bgPlayerRef.current = new window.YT.Player(playerDivRef.current, {
+        videoId: '01jdjzDWAMk', // Peppa Pig - requested video
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          start: 4, // start at 4s per URL
+          loop: 1,
+          playlist: '01jdjzDWAMk'
+        },
+        events: {
+          onReady: (e) => {
+            try {
+              const iframe = e.target.getIframe?.();
+              if (iframe) {
+                iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+                iframe.setAttribute('tabindex', '-1');
+                iframe.setAttribute('title', 'Background audio');
+              }
+              e.target.unMute();
+              e.target.setVolume(100);
+              e.target.playVideo();
+            } catch {}
+          },
+        }
+      });
+
+      // Fallback: unmute + play on first user interaction (for browsers blocking autoplay with sound)
+      const tryUnmuteOnce = () => {
+        const p = bgPlayerRef.current;
+        if (p && p.playVideo) {
+          try { p.unMute(); p.setVolume(100); p.playVideo(); } catch {}
+        }
+        document.removeEventListener('click', tryUnmuteOnce);
+        document.removeEventListener('touchstart', tryUnmuteOnce);
+        document.removeEventListener('keydown', tryUnmuteOnce);
+      };
+      document.addEventListener('click', tryUnmuteOnce, { once: true });
+      document.addEventListener('touchstart', tryUnmuteOnce, { once: true });
+      document.addEventListener('keydown', tryUnmuteOnce, { once: true });
+    } catch {
+      // no-op
+    }
+  }, [ytReady]);
 
   const headerStyle = {
     position: 'sticky',
@@ -77,8 +158,8 @@ export default function App() {
     padding: '24px 16px',
     lineHeight: 1.6,
     color: evilMode ? '#ffdddd' : '#222',
-    background: evilMode ? '#0d0000' : '#fff',
-    minHeight: '100vh',
+    // Transparent in normal mode so the rainbow shows through; solid in evil mode for readability
+    background: evilMode ? '#0d0000' : 'transparent',
   };
 
   const renderContent = () => {
@@ -101,14 +182,381 @@ export default function App() {
         return (
           <section>
             <h2>Shopping</h2>
-            <p>Links and items can go here.</p>
+            <p>Browse items we like. These links open on Amazon in a new tab.</p>
+
+            {/* Shirts group */}
+            <h3 style={{ marginTop: 16 }}>Shirts</h3>
+            <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
+              {/* Shirt 1 */}
+              <div style={{
+                background: evilMode ? '#1a0000' : '#fff',
+                padding: 12,
+                borderRadius: 8,
+                border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              }}>
+                <h4 style={{ marginTop: 0, marginBottom: 8 }}>AIWUHE Kids Short Sleeve Crewneck Tee</h4>
+                <p style={{ marginTop: 0, marginBottom: 12 }}>Simple crewneck t-shirt with heart theme options.</p>
+                <a
+                  href="https://www.amazon.com/AIWUHE-Short-Sleeve-T-Shirt-Toddler-Crewneck/dp/B0F2J6NTF7/ref=sr_1_10?crid=1PUAQYQ9K5G5Y&dib=eyJ2IjoiMSJ9.MOyfi2qOuHGe37TOH56v8WDE4zsJjvn5_yXnSdgFhNzPKjm9-Vce-4ej8IClzvtUPsFDqSLFy-IiwooAcSUMtQMLGWXpoowdf392lVVLpIiMo2-xVKQ628VKU7oyoafD6bMAYeHnVuE4BRnHLAhJGdhSCMZcQP5F8NuVFh0S27LPaptcCJQYH9JZwimlrPBF0sB3ClPz9TQGLzomwVz-UWRA0F0-p2omXrOYk4QOtPg6WI-2gvEYsD8352iwHNH324QtXk7e2VK-T7VfDGE_A9Abmw64k_SgN7n1slrAtsA.4401xmCT3PIGGUw1w4-qHJ8XZoeKtVop7E9oaa5PrwY&dib_tag=se&keywords=kids+t-shirts+hearts&qid=1755283818&sprefix=kids+t-shirts+hear%2Caps%2C213&sr=8-10"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View AIWUHE Kids Short Sleeve Crewneck Tee on Amazon"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  View on Amazon
+                </a>
+              </div>
+
+              {/* Shirt 2 */}
+              <div style={{
+                background: evilMode ? '#1a0000' : '#fff',
+                padding: 12,
+                borderRadius: 8,
+                border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              }}>
+                <h4 style={{ marginTop: 0, marginBottom: 8 }}>LittleSpring Valentines Kids T-Shirt</h4>
+                <p style={{ marginTop: 0, marginBottom: 12 }}>Cute heart-themed tee for little ones.</p>
+                <a
+                  href="https://www.amazon.com/LittleSpring-Clothes-Tshirt-Little-Valentines/dp/B0BWDL79PB/ref=sr_1_9?crid=1PUAQYQ9K5G5Y&dib=eyJ2IjoiMSJ9.MOyfi2qOuHGe37TOH56v8WDE4zsJjvn5_yXnSdgFhNzPKjm9-Vce-4ej8IClzvtUPsFDqSLFy-IiwooAcSUMtQMLGWXpoowdf392lVVLpIiMo2-xVKQ628VKU7oyoafD6bMAYeHnVuE4BRnHLAhJGdhSCMZcQP5F8NuVFh0S27LPaptcCJQYH9JZwimlrPBF0sB3ClPz9TQGLzomwVz-UWRA0F0-p2omXrOYk4QOtPg6WI-2gvEYsD8352iwHNH324QtXk7e2VK-T7VfDGE_A9Abmw64k_SgN7n1slrAtsA.4401xmCT3PIGGUw1w4-qHJ8XZoeKtVop7E9oaa5PrwY&dib_tag=se&keywords=kids%2Bt-shirts%2Bhearts&qid=1755283818&sprefix=kids%2Bt-shirts%2Bhear%2Caps%2C213&sr=8-9&th=1&psc=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View LittleSpring Valentines Kids T-Shirt on Amazon"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  View on Amazon
+                </a>
+              </div>
+
+              {/* Shirt 3 */}
+              <div style={{
+                background: evilMode ? '#1a0000' : '#fff',
+                padding: 12,
+                borderRadius: 8,
+                border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              }}>
+                <h4 style={{ marginTop: 0, marginBottom: 8 }}>Eitqtbea Hippie Hearts Kids T-Shirt</h4>
+                <p style={{ marginTop: 0, marginBottom: 12 }}>Groovy heart design tee for children.</p>
+                <a
+                  href="https://www.amazon.com/Eitqtbea-T-Shirt-Children-Sleeve-Hippies/dp/B0F48YTBM4/ref=sr_1_1_sspa?crid=1PUAQYQ9K5G5Y&dib=eyJ2IjoiMSJ9.MOyfi2qOuHGe37TOH56v8WDE4zsJjvn5_yXnSdgFhNzPKjm9-Vce-4ej8IClzvtUPsFDqSLFy-IiwooAcSUMtQMLGWXpoowdf392lVVLpIiMo2-xVKQ628VKU7oyoafD6bMAYeHnVuE4BRnHLAhJGdhSCMZcQP5F8NuVFh0S27LPaptcCJQYH9JZwimlrPBF0sB3ClPz9TQGLzomwVz-UWRA0F0-p2omXrOYk4QOtPg6WI-2gvEYsD8352iwHNH324QtXk7e2VK-T7VfDGE_A9Abmw64k_SgN7n1slrAtsA.4401xmCT3PIGGUw1w4-qHJ8XZoeKtVop7E9oaa5PrwY&dib_tag=se&keywords=kids+t-shirts+hearts&qid=1755283818&sprefix=kids+t-shirts+hear%2Caps%2C213&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View Eitqtbea Hippie Hearts Kids T-Shirt on Amazon"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  View on Amazon
+                </a>
+              </div>
+            </div>
+
+            {/* Shorts group */}
+            <h3 style={{ marginTop: 24 }}>Shorts</h3>
+            <div style={{ display: 'grid', gap: 16, maxWidth: 900 }}>
+              {/* Product 1 */}
+              <div style={{
+                background: evilMode ? '#1a0000' : '#fff',
+                padding: 12,
+                borderRadius: 8,
+                border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              }}>
+                <h3 style={{ marginTop: 0, marginBottom: 8 }}>Athletic Shorts with Drawstring (Kids)</h3>
+                <p style={{ marginTop: 0, marginBottom: 12 }}>Comfy elastic waist shorts great for play time.</p>
+                <a
+                  href="https://www.amazon.com/Athletic-Shorts-Drawstring-Elastic-Clothes/dp/B0F5W4D6TM"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View Athletic Shorts with Drawstring on Amazon"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  View on Amazon
+                </a>
+              </div>
+
+              {/* Product 2 */}
+              <div style={{
+                background: evilMode ? '#1a0000' : '#fff',
+                padding: 12,
+                borderRadius: 8,
+                border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              }}>
+                <h3 style={{ marginTop: 0, marginBottom: 8 }}>JOYSAY American 4th of July Toddler Shorts</h3>
+                <p style={{ marginTop: 0, marginBottom: 12 }}>Festive toddler shorts perfect for summer celebrations.</p>
+                <a
+                  href="https://www.amazon.com/JOYSAY-American-July-Toddler-Shorts/dp/B0D6G94Y26?th=1&psc=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View JOYSAY American 4th of July Toddler Shorts on Amazon"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  View on Amazon
+                </a>
+              </div>
+            </div>
           </section>
         );
       case 'activities':
         return (
           <section>
             <h2>Activities</h2>
-            <p>Games, schedules, and more.</p>
+            <p>Download and print this coloring page!</p>
+            <div style={{
+              background: evilMode ? '#1a0000' : '#fff',
+              padding: 12,
+              borderRadius: 8,
+              border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              maxWidth: 900
+            }}>
+              <img
+                src={coloring1}
+                alt="Coloring page: playful scene with rainbow, teddy bear, and sign"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block'
+                }}
+              />
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
+                <a
+                  href={coloring1}
+                  download="coloring_page_1.png"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  Download PNG
+                </a>
+                <a
+                  href={coloring1}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  Open in new tab for printing
+                </a>
+              </div>
+            </div>
+
+            {/* Second coloring page below the first */}
+            <div style={{
+              background: evilMode ? '#1a0000' : '#fff',
+              padding: 12,
+              borderRadius: 8,
+              border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              maxWidth: 900,
+              marginTop: 16
+            }}>
+              <img
+                src={coloring2}
+                alt="Coloring page 2: printable drawing page"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block'
+                }}
+              />
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
+                <a
+                  href={coloring2}
+                  download="coloring_page_2.png"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  Download PNG
+                </a>
+                <a
+                  href={coloring2}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  Open in new tab for printing
+                </a>
+              </div>
+            </div>
+
+            {/* Third coloring page below the second */}
+            <div style={{
+              background: evilMode ? '#1a0000' : '#fff',
+              padding: 12,
+              borderRadius: 8,
+              border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              maxWidth: 900,
+              marginTop: 16
+            }}>
+              <img
+                src={coloring3}
+                alt="Coloring page 3: printable drawing page"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block'
+                }}
+              />
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
+                <a
+                  href={coloring3}
+                  download="coloring_page_3.png"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  Download PNG
+                </a>
+                <a
+                  href={coloring3}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: 'none',
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1px solid ${evilMode ? '#660000' : '#dddddd'}`,
+                    background: evilMode ? '#2a0000' : '#f9f9f9',
+                    color: 'inherit',
+                    fontWeight: 600
+                  }}
+                >
+                  Open in new tab for printing
+                </a>
+              </div>
+            </div>
+          </section>
+        );
+      case 'dance':
+        return (
+          <section>
+            <h2>Dance Mode</h2>
+            <p>Get your groove on! The video will start automatically when you open this tab.</p>
+            <div style={{
+              background: evilMode ? '#1a0000' : '#fff',
+              padding: 12,
+              borderRadius: 8,
+              border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              maxWidth: 900
+            }}>
+              <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+                <iframe
+                  title="Dance mode video"
+                  src={`https://www.youtube.com/embed/lxqqs7A3Edo?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </section>
+        );
+      case 'jokes':
+        return (
+          <section>
+            <h2 style={{ fontSize: 36, marginBottom: 8 }}>Jokes</h2>
+            <div
+              style={{
+                background: evilMode ? '#1a0000' : 'linear-gradient(180deg, #ffffff 0%, #fff7ff 100%)',
+                color: 'inherit',
+                padding: 16,
+                borderRadius: 14,
+                border: `1px solid ${evilMode ? '#330000' : '#ece3f5'}`,
+                boxShadow: evilMode
+                  ? '0 6px 18px rgba(0,0,0,0.45)'
+                  : '0 8px 20px rgba(98,0,153,0.12)',
+                maxWidth: 900
+              }}
+            >
+              <p style={{ fontSize: 18, marginTop: 0 }}>Here are some jokes Abby created to brighten your day:</p>
+              <ul style={{ listStyle: 'none', paddingLeft: 0, marginTop: 12 }}>
+                <li style={{ fontSize: 22, lineHeight: 1.5, marginBottom: 12, display: 'flex', gap: 10 }}>
+                  <span role="img" aria-hidden="true">🤣</span>
+                  <span>What kind of lightbulb goes blah blah blah? A person appluhcation.</span>
+                </li>
+                <li style={{ fontSize: 22, lineHeight: 1.5, marginBottom: 12, display: 'flex', gap: 10 }}>
+                  <span role="img" aria-hidden="true">😂</span>
+                  <span>What kind of ninzun goes papenzing? A 1 1 1.</span>
+                </li>
+                <li style={{ fontSize: 22, lineHeight: 1.5, marginBottom: 12, display: 'flex', gap: 10 }}>
+                  <span role="img" aria-hidden="true">😜</span>
+                  <span>What kind of tootkey goes ninja hunting? A rainbow rainbow paper.</span>
+                </li>
+                <li style={{ fontSize: 22, lineHeight: 1.5, marginBottom: 4, display: 'flex', gap: 10 }}>
+                  <span role="img" aria-hidden="true">😆</span>
+                  <span>What kind of chocolate cake goes to joe's house? A communication robot.</span>
+                </li>
+              </ul>
+            </div>
           </section>
         );
       case 'faqs':
@@ -124,7 +572,16 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: evilMode ? '#0d0000' : '#fff' }}>
+    <div
+      style={{
+        // Big rainbow background in normal mode; solid dark in evil mode
+        background: evilMode
+          ? '#0d0000'
+          : 'linear-gradient(135deg, #ff0000 0%, #ff7f00 16%, #ffff00 33%, #00ff00 50%, #0000ff 66%, #4b0082 83%, #8b00ff 100%)',
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+      }}
+    >
       <header style={headerStyle}>
         <nav style={navStyle}>
           <button
@@ -167,16 +624,39 @@ export default function App() {
             </li>
             <li>
               <button
+                style={linkStyle(activeTab === 'dance')}
+                onClick={() => setActiveTab('dance')}
+                aria-pressed={activeTab === 'dance'}
+              >
+                dance mode
+              </button>
+            </li>
+            <li>
+              <button
+                style={linkStyle(activeTab === 'jokes')}
+                onClick={() => setActiveTab('jokes')}
+                aria-pressed={activeTab === 'jokes'}
+              >
+                jokes
+              </button>
+            </li>
+            <li>
+              <button
                 style={linkStyle(activeTab === 'faqs')}
                 onClick={() => setActiveTab('faqs')}
                 aria-pressed={activeTab === 'faqs'}
-              >
+             >
                 FAQs
               </button>
             </li>
           </ul>
         </nav>
       </header>
+
+      {/* Hidden background YouTube player for main page audio */}
+      <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', bottom: 0, right: 0, zIndex: -1 }} aria-hidden="true">
+        <div ref={playerDivRef}></div>
+      </div>
 
       <main style={mainStyle}>
         {renderContent()}
