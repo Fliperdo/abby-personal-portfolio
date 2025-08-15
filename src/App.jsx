@@ -1,89 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import coloring1 from './assets/coloring_page_1.png';
 import coloring2 from './assets/coloring_page_2.png';
 import coloring3 from './assets/coloring_page_3.png';
 
 export default function App() {
-  const bgPlayerRef = useRef(null);
-  const playerDivRef = useRef(null);
-  const [ytReady, setYtReady] = useState(false);
   const [evilMode, setEvilMode] = useState(false);
   const [activeTab, setActiveTab] = useState('abby');
-
-  // Load YouTube IFrame API once
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.YT && window.YT.Player) {
-      setYtReady(true);
-      return;
-    }
-    const existing = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
-    if (!existing) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      document.head.appendChild(tag);
-    }
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof prev === 'function') prev();
-      setYtReady(true);
-    };
-  }, []);
-
-  // Create a background player for the main page (Abby tab)
-  useEffect(() => {
-    if (!ytReady) return;
-    if (bgPlayerRef.current) return; // already created (React StrictMode safe)
-
-    try {
-      bgPlayerRef.current = new window.YT.Player(playerDivRef.current, {
-        videoId: '01jdjzDWAMk', // Peppa Pig - requested video
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          start: 4, // start at 4s per URL
-          loop: 1,
-          playlist: '01jdjzDWAMk'
-        },
-        events: {
-          onReady: (e) => {
-            try {
-              const iframe = e.target.getIframe?.();
-              if (iframe) {
-                iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-                iframe.setAttribute('tabindex', '-1');
-                iframe.setAttribute('title', 'Background audio');
-              }
-              e.target.unMute();
-              e.target.setVolume(100);
-              e.target.playVideo();
-            } catch {}
-          },
-        }
-      });
-
-      // Fallback: unmute + play on first user interaction (for browsers blocking autoplay with sound)
-      const tryUnmuteOnce = () => {
-        const p = bgPlayerRef.current;
-        if (p && p.playVideo) {
-          try { p.unMute(); p.setVolume(100); p.playVideo(); } catch {}
-        }
-        document.removeEventListener('click', tryUnmuteOnce);
-        document.removeEventListener('touchstart', tryUnmuteOnce);
-        document.removeEventListener('keydown', tryUnmuteOnce);
-      };
-      document.addEventListener('click', tryUnmuteOnce, { once: true });
-      document.addEventListener('touchstart', tryUnmuteOnce, { once: true });
-      document.addEventListener('keydown', tryUnmuteOnce, { once: true });
-    } catch {
-      // no-op
-    }
-  }, [ytReady]);
 
   const headerStyle = {
     position: 'sticky',
@@ -652,11 +574,6 @@ export default function App() {
           </ul>
         </nav>
       </header>
-
-      {/* Hidden background YouTube player for main page audio */}
-      <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', bottom: 0, right: 0, zIndex: -1 }} aria-hidden="true">
-        <div ref={playerDivRef}></div>
-      </div>
 
       <main style={mainStyle}>
         {renderContent()}
