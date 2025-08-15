@@ -98,6 +98,24 @@ export default function App() {
           <section>
             <h2>Party Info</h2>
             <p>Welcome! Add your party details here.</p>
+            <div style={{
+              background: evilMode ? '#1a0000' : '#fff',
+              padding: 12,
+              borderRadius: 8,
+              border: `1px solid ${evilMode ? '#330000' : '#e5e5e5'}`,
+              maxWidth: 900,
+              marginTop: 12
+            }}>
+              <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+                <iframe
+                  title="Party info video - autoplay"
+                  src={`https://www.youtube.com/embed/01jdjzDWAMk?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </div>
           </section>
         );
       case 'shopping':
@@ -432,10 +450,19 @@ export default function App() {
             }}>
               <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
                 <iframe
-                  title="Dance mode video"
-                  src={`https://www.youtube.com/embed/lxqqs7A3Edo?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
+                  title="Dance mode video - autoplay"
+                  src={`https://www.youtube.com/embed/S1atmGLwbIE?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+              <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', marginTop: 16 }}>
+                <iframe
+                  title="Dance mode video - second"
+                  src={`https://www.youtube.com/embed/lxqqs7A3Edo?playsinline=1&rel=0&modestbranding=1`}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
               </div>
