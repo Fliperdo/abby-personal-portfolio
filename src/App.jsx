@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import coloring1 from './assets/coloring_page_1.png';
 import coloring2 from './assets/coloring_page_2.png';
 import coloring3 from './assets/coloring_page_3.png';
@@ -6,6 +6,28 @@ import coloring3 from './assets/coloring_page_3.png';
 export default function App() {
   const [evilMode, setEvilMode] = useState(false);
   const [activeTab, setActiveTab] = useState('abby');
+  const [donuts, setDonuts] = useState([]);
+  const donutIdRef = useRef(0);
+
+  const spawnDonuts = () => {
+    const newDonuts = Array.from({ length: 20 }, () => {
+      const id = donutIdRef.current++;
+      return {
+        id,
+        left: Math.random() * 100,
+        delay: Math.random() * 1.5,
+        duration: 2.5 + Math.random() * 2,
+        size: 24 + Math.floor(Math.random() * 32),
+        rotation: Math.random() * 360,
+      };
+    });
+    setDonuts(prev => [...prev, ...newDonuts]);
+    // Remove them after the longest possible animation finishes
+    setTimeout(() => {
+      const ids = new Set(newDonuts.map(d => d.id));
+      setDonuts(prev => prev.filter(d => !ids.has(d.id)));
+    }, 6000);
+  };
 
   const headerStyle = {
     position: 'sticky',
@@ -74,13 +96,25 @@ export default function App() {
     fontWeight: 600,
   };
 
+  const donutBtnStyle = {
+    cursor: 'pointer',
+    border: '1px solid',
+    borderColor: evilMode ? '#660000' : '#f5a623',
+    background: evilMode ? '#2a0000' : '#fff8ee',
+    color: evilMode ? '#ffdddd' : '#b35900',
+    padding: '6px 10px',
+    borderRadius: 8,
+    fontWeight: 700,
+    fontSize: 15,
+    letterSpacing: '0.3px',
+  };
+
   const mainStyle = {
     maxWidth: 1000,
     margin: '0 auto',
     padding: '24px 16px',
     lineHeight: 1.6,
     color: evilMode ? '#ffdddd' : '#222',
-    // Transparent in normal mode so the rainbow shows through; solid in evil mode for readability
     background: evilMode ? '#0d0000' : 'transparent',
   };
 
@@ -523,14 +557,42 @@ export default function App() {
   return (
     <div
       style={{
-        // Big rainbow background in normal mode; solid dark in evil mode
         background: evilMode
           ? '#0d0000'
           : 'linear-gradient(135deg, #ff0000 0%, #ff7f00 16%, #ffff00 33%, #00ff00 50%, #0000ff 66%, #4b0082 83%, #8b00ff 100%)',
         backgroundAttachment: 'fixed',
         minHeight: '100vh',
+        position: 'relative',
       }}
     >
+      {/* Donut rain layer */}
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
+        <style>{`
+          @keyframes donutFall {
+            0%   { transform: translateY(-80px) rotate(var(--rot-start)); opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(110vh) rotate(var(--rot-end)); opacity: 0; }
+          }
+        `}</style>
+        {donuts.map(d => (
+          <span
+            key={d.id}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: `${d.left}%`,
+              fontSize: d.size,
+              '--rot-start': `${d.rotation}deg`,
+              '--rot-end': `${d.rotation + 360}deg`,
+              animation: `donutFall ${d.duration}s ${d.delay}s ease-in forwards`,
+              userSelect: 'none',
+            }}
+          >
+            🍩
+          </span>
+        ))}
+      </div>
+
       <header style={headerStyle}>
         <nav style={navStyle}>
           <button
@@ -557,6 +619,11 @@ export default function App() {
                 aria-pressed={activeTab === 'shopping'}
               >
                 shopping
+              </button>
+            </li>
+            <li>
+              <button style={donutBtnStyle} onClick={spawnDonuts} title="Make it rain donuts!">
+                🍩 donut rain
               </button>
             </li>
             <li>
